@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Curso de API REST con Laravel</title>
+</head>
+
+<body>
+    <header class="text-center">
+        <h1>Curso de API REST con Laravel</h1>
+    </header>
+    <main class="container">
+        <hr>
+
+        <section class="row">
+            <article class="col">
+                <h2>Sección 1 de 18 - Lo que aprenderás sobre API REST con Laravel</h2>
+
+            </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 2 de 18 - Que es un api</h2>
+            
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 3 de 18 - Sitio web: Estructura Inicial</h2>
+            <pre class="prettyprint">
+                    
+                > composer create-project laravel/laravel:^8.0 api
+                > cd api
+                > php artisan make:model Post -cmf
+            </pre>
+            <p>Configurar la Migracion</p>
+            <pre class="prettyprint">
+                    
+                public function up()
+                {
+                    Schema::create('posts', function (Blueprint $table) {
+                        $table->id();
+                        
+                        $table->unsignedBigInteger('user_id');
+                        $table->string('title');
+                        $table->string('slug')->unique();
+                        $table->text('content');
+                        
+                        $table->timestamps();
+            
+                        $table->foreign('user_id')->references('id')->on('users');
+                    });
+                }
+            </pre>
+            <p>Configurar el factory</p>
+            <pre class="prettyprint">
+                    
+                public function definition()
+                {
+                    return [
+                        'user_id' => rand(1, 10),
+                        'title' => $this->faker->sentence,
+                        'slug' => $this->faker->slug,
+                        'content' => $this->faker->text(1600)
+                    ];
+                }
+            </pre>
+            <p>Configurar el seed</p>
+            <pre class="prettyprint">
+                    
+                public function run()
+                {
+                    \App\Models\User::factory(10)->create();
+                    \App\Models\Post::factory(120)->create();
+                }
+            </pre>
+            <p>Configurar la Base de Datos en las variables de entorno y crear la base de datos, en este caso con workbench (Mysql)</p>
+            <p>Ejecutar la migracions</p>
+            <pre class="prettyprint">
+                    
+                > php artisan migrate --seed
+            </pre>
+            <p>Ya podemos ver 120 posts y 10 suarios en la base de datos, pero vamos a verlos dentro de la aplicacion, creando una ruta para ello</p>
+            <pre class="prettyprint">
+                    
+                Route::get('/', [App\Http\Controllers\PostController::class,  'index']);
+            </pre>
+            <p>Creamos el metodo index en el controlador</p>
+            <pre class="prettyprint">
+                    
+                public function index()
+                {
+                    return view('index', [
+                        'posts' => Post::latest()->paginate()
+                    ]);
+                }
+            </pre>
+
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 4 de 18 - Sitio web: completando la estructura</h2>
+            <p>Creamos la vista</p>
+            <pre class="prettyprint">
+                    
+                &lt!DOCTYPE html>
+                &lthtml lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+                    &lthead>
+                        &ltmeta charset="utf-8">
+                        &ltmeta name="viewport" content="width=device-width, initial-scale=1">
+                
+                        &lttitle>Laravel&lt/title>
+                
+                    &lt/head>
+                    &ltbody>
+                        @foreach($posts as $post)
+                        &ltdiv>
+                            &lth2>{{ $post->title }}&lt/h2>
+                        &lt/div>
+                        @endforeach
+                        {{ $posts->links() }}
+                    &lt/body>
+                &lt/html>
+                
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 5 de 18 - Mejorando el aspecto del sitio con Tailwind CSS</h2>
+            <pre class="prettyprint">
+                    
+                &lt!DOCTYPE html>
+                &lthtml lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+                    &lthead>
+                        &ltmeta charset="utf-8">
+                        &ltmeta name="viewport" content="width=device-width, initial-scale=1">
+                
+                        &lttitle>Laravel&lt/title>
+                
+                        &ltlink href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+                    &lt/head>
+                    &ltbody class="bg-gray-100 text-gray-700">
+                        &ltdiv class="container mx-auto px-4">
+                            &ltdiv class="grid grid-cols-3 my-10">
+                                @foreach($posts as $post)
+                                &ltdiv class="bg-white hover:bg-blue-100 border border-gray-200 p-5">
+                                    &lth2 class="font-bold text-lg mb-4">{{ $post->title }}&lt/h2>
+                                    &ltp class="text-xs">{{ $post->excerpt }}&lt/p>
+                                    &ltp class="text-xs text-right">{{ $post->published_at }}&lt/p>
+                                &lt/div>
+                                @endforeach
+                            &lt/div>
+                            &ltdiv class="mb-10">
+                                {{ $posts->links() }}
+                            &lt/div>
+                        &lt/div>
+                    &lt/body>
+                &lt/html>
+            </pre>
+            <p>Configuramos el modelo para traer algunos datos</p>
+            <pre class="prettyprint">
+                    
+                class Post extends Model
+                {
+                    use HasFactory;
+                
+                    public function getExcerptAttribute()
+                    {
+                        return substr($this->content, 0, 120);
+                    }
+                
+                    public function getPublishedAtAttribute()
+                    {
+                        return $this->created_at->format('d/m/Y');
+                    }
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 6 de 18 - Terminos </h2>
+            
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 7 de 18 - Versión 1: planificación y configuración inicial</h2>
+            <pre class="prettyprint">
+                    
+                > php artisan make:controller Api/V1/PostController --api --model=Post
+            </pre>
+            <p>Configuro la funcion show</p>
+            <pre class="prettyprint">
+                    
+                public function show(Post $post)
+                {
+                    return $post;
+                }
+            </pre>
+            <p>Configuramos las rutas</p>
+            <pre class="prettyprint">
+                    
+                Route::apiResource('v1/posts', \App\Http\Controllers\Api\V1\PostController::class);
+            </pre>
+            <p>Vemos que creamos</p>
+            <pre class="prettyprint">
+                    
+                > php artisan route:list
+            </pre>
+            <p>Vemos las 5 rutas, pero si solo queremos trabajr con una</p>
+            <pre class="prettyprint">
+                    
+                Route::apiResource('v1/posts', \App\Http\Controllers\Api\V1\PostController::class)->only('show');
+            </pre>
+            <p>Podemos probar con postman <a href="http://127.0.0.1:8000/api/v1/posts/1">http://127.0.0.1:8000/api/v1/posts/1</a></p>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 8 de 18 - Versión 1: recurso</h2>
+            <pre class="prettyprint">
+                    
+                > php artisan make:resource V1/PostResource
+            </pre>
+            <p>Configuramos el recurso</p>
+            <pre class="prettyprint">
+                    
+                public function toArray($request)
+                {
+                    return [
+                        'title' => $this->title,
+                        'slug' => $this->slug,
+                        'excerpt' => $this->excerpt,
+                        'content' => $this->content,
+                    ];
+                }
+            </pre>
+            <p>Lo usamos en el controlador</p>
+            <pre class="prettyprint">
+
+                use App\Http\Resources\V1\PostResource;
+
+                // ...
+                // ...
+                // ...
+                    
+                public function show(Post $post)
+                {
+                    return new PostResource($post);
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 9 de 18 - Versión 1: colección</h2>
+            <p>Modificamos la ruta</p>
+            <pre class="prettyprint">
+                    
+                Route::apiResource('v1/posts', \App\Http\Controllers\Api\V1\PostController::class)
+                    ->only(['index', 'show']);
+            </pre>
+            <p>Modificamos el controlador</p>
+            <pre class="prettyprint">
+                    
+                public function index()
+                {
+                    return PostResource::collection(Post::latest()->paginate());
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 10 de 18 - Repaso del código</h2>
+            <pre class="prettyprint">
+                    
+                Route::apiResource('v1/posts', \App\Http\Controllers\Api\V1\PostController::class)
+                ->only(['index', 'show', 'destroy']);
+            </pre>
+            <pre class="prettyprint">
+                    
+                public function destroy(Post $post)
+                {
+                    $post->delete();
+            
+                    return response()->json([
+                        'message' => 'Success'
+                    ], 204);
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 11 de 18 - Versión 2: planificación y configuración inicial</h2>
+            <pre class="prettyprint">
+                    
+                > php artisan make:controller Api/v2/PostController --api --model=Post
+                > php artisan make:resource V2/PostResource
+                > php artisan make:resource V2/PostCollection
+            </pre>
+
+            <p>Modificamos las rutas</p>
+            <pre class="prettyprint">
+                    
+                use \App\Http\Controllers\Api\V1\PostController as Postv1;
+                use \App\Http\Controllers\Api\V2\PostController as Postv2;
+                
+                Route::apiResource('v1/posts', Postv1::class)
+                    ->only(['index', 'show', 'destroy']);
+                
+                Route::apiResource('v2/posts', Postv2::class)
+                    ->only(['index', 'show', 'destroy']);
+            </pre>
+
+            <p>Verificamos las rutas</p>
+
+            <pre class="prettyprint">
+                    
+                > php artisan route:list
+            </pre>
+
+            <p>Agregamos en nuestro PostController v2</p>
+            <pre class="prettyprint">
+                    
+                use App\Http\Resources\V2\PostResource;
+                use App\Http\Resources\V2\PostCollection;
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 12 de 18 - Versión 2: Recurso</h2>
+            <p>Funcion show en el controlador</p>
+            <pre class="prettyprint">
+                    
+                public function show(Post $post)
+                {
+                    return new PostResource($post);
+                }
+            </pre>
+
+            <p>Modificamos el PostResource</p>
+            <pre class="prettyprint">
+                    
+                public function toArray($request)
+                {
+                    return [
+                        'id' => $this->id,
+                        'post_name' => $this->title,
+                        'slug' => $this->slug,
+                        'content' => $this->content,
+                        'author' => [
+                            'name' => $this->user->name,
+                            'email' => $this->user->email
+                        ],
+                        'created_at' => $this->published_at
+                    ];
+                }
+            </pre>
+            <p>Tenemos que hacer la relación en el modelo</p>
+            <pre class="prettyprint">
+                    
+                public function user()
+                {
+                    return $this->belongsTo(User::class);
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 12 de 18 - Version 2: Coleccion</h2>
+            <p>Función index en el postcontorller</p>
+            <pre class="prettyprint">
+                    
+                public function index()
+                {
+                    return new PostCollection(Post::latest()->paginate());
+                }
+            </pre>
+            <p>Con esto funciona, pero podemos modificar la entrga de la informacion, editando el postcollection</p>
+            <pre class="prettyprint">
+                    
+                public $collects = PostResource::class;
+                /**
+                 * Transform the resource collection into an array.
+                 *
+                 * @param  \Illuminate\Http\Request  $request
+                 * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+                 */
+                public function toArray($request)
+                {
+                    return [
+                        'data' => $this->collection,
+                        'meta' => [
+                            'organization' => 'Platzi',
+                            'authors' => [
+                                'Italomoralesf',
+                                'Platzi'
+                            ]
+                        ],
+                        'type' => 'articles'
+                    ];
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 14 de 18 - Introduccion a la API privada</h2>
+            <pre class="prettyprint">
+                    
+                > composer require laravel/sanctum
+                > php artisan migrate
+            </pre>
+            <p>Modificamos las rutas</p>
+            <pre class="prettyprint">
+                    
+            Route::apiResource('v1/posts', Postv1::class)
+                ->only(['index', 'show', 'destroy'])
+                ->middleware('auth:sanctum');
+            
+            Route::apiResource('v2/posts', Postv2::class)
+                ->only(['index', 'show', 'destroy'])
+                ->middleware('auth:sanctum');
+            </pre>
+            <p>Colocamos un header en postman</p>
+            <pre class="prettyprint">
+                    
+                Accept ---------- application/json
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 15 de 18 - autenticacion</h2>
+            <pre class="prettyprint">
+                    
+                > php artisan make:controller Api/LoginController
+            </pre>
+            <p>Creamos la ruta</p>
+            <pre class="prettyprint">
+                    
+                Route::post('login', [
+                    App\Http\Controllers\Api\LoginController::class,
+                    'login'
+                ]);
+            </pre>
+            <p>Modificamos el modelo user... ya lo tenia.. pero por si acaso</p>
+            <pre class="prettyprint">
+                    
+                use Laravel\Sanctum\HasApiTokens;
+
+                class User extends Authenticatable
+                {
+                    use HasApiTokens, HasFactory, Notifiable;
+            </pre>
+            <p>Ahora modificamos el controlador de login</p>
+            <pre class="prettyprint">
+                    
+
+                use App\Models\User;
+                use Illuminate\Support\Facades\Auth;
+                
+                class LoginController extends Controller
+                {
+                    public function login(Request $request)
+                    {
+                        $this->validateLogin($request);
+                    }
+                
+                    public function validateLogin(Request $request)
+                    {
+                        return $request->validate([
+                            'email' => 'required|email',
+                            'password' => 'required',
+                            'name' => 'required'
+                        ]);
+                    }
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 16 de 18 - acceso</h2>
+            <p>Modificamos la funcion login</p>
+            <pre class="prettyprint">
+                    
+                public function login(Request $request)
+                {
+                    $this->validateLogin($request);
+            
+                    if (Auth::attempt($request->only('email', 'password'))) {
+                        return response()->json([
+                            'token' => $request->user()->createToken($request->name)->plainTextToken,
+                            'message' => 'Success'
+                        ]);
+                    }
+            
+                    return response()->json([
+                        'message' => 'Unauthorize'
+                    ], 401);
+                }
+            </pre>
+            <p>podemos probar con postman</p>
+            <pre class="prettyprint">
+                    
+                {
+                    "email": "adonis.reichert@example.org",
+                    "password": "password",
+                    "name": "a"
+                }
+            </pre>
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 17 de 18 - Repaso final</h2>
+            
+          </article>
+        </section>
+
+        <hr>
+        
+        <section class="row">
+          <article class="col">
+            <h2>Sección 18 de 18 - Despedida</h2>
+            
+          </article>
+        </section>
+
+
+
+
+
+
+
+
+
+
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
